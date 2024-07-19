@@ -3,6 +3,8 @@
 // Do it with Firefox. This will not work on Chrome or Safari.
 // Paste this code on your console and press Return
 
+////////////////////////////////////////////////////////////////// UTILITIES
+
 // ECMA has forsaken us. We are on our own. I have written this function countless times.
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // Have courage
@@ -10,6 +12,25 @@ const logMap = whatIShouldDo => whatIHaveBeenGiven => {
     whatIShouldDo(whatIHaveBeenGiven);
     return whatIHaveBeenGiven;
 };
+
+////////////////////////////////////////////////////////////////// STATE HANDLING
+
+const TUNGL_BLOCKER_STORAGE_KEY = "tungl-blocker-data";
+
+// initialize state
+localStorage.setItem(TUNGL_BLOCKER_STORAGE_KEY, JSON.stringify({
+    blockedUsers: {}
+}))
+
+
+const saveUserBlockage = userIdentifier => {
+    const currentState = JSON.parse(localStorage.getItem(TUNGL_BLOCKER_STORAGE_KEY) ?? "");
+    const blockedUsers = currentState.blockedUsers;
+    blockedUsers[userIdentifier] = true;
+    localStorage.setItem(TUNGL_BLOCKER_STORAGE_KEY, JSON.stringify({ ...currentState, blockedUsers }));
+};
+
+////////////////////////////////////////////////////////////////// HTML HANDLING
 
 // This path is shared by the Followers and the Confirmation.
 const commonRootXpath = `/html/body/div/div/div/`;
@@ -22,12 +43,25 @@ const childrenOfFirstChildOfSection = Array.from($x(sectionXPath)?.[0]?.childNod
 const followers = childrenOfFirstChildOfSection
     .filter(row => row.childNodes[0].childNodes.length === 3).map(row => row.childNodes[0]);
 
-const rowToPopupButton = row => {
+/**
+ * @returns {string} 
+ */
+const followerRowToBlogName = row => {
     /* The Follower has three Children.
      * The first child can show you to the Follower.
      * The second child speaks of the Follower.
      * The third child asks you what you need.
-     * You need the third child.
+     * You need the second child to know the Follower's name.
+     */
+    return row.childNodes[1].childNodes[0].childNodes[1].childNodes[0].textContent.trim();
+}
+
+const followerRowToPopupButton = row => {
+    /* The Follower has three Children.
+     * The first child can show you to the Follower.
+     * The second child speaks of the Follower.
+     * The third child asks you what you need.
+     * You need the third child to know how to banish the Follower.
      */
     const divWithSpanInside = row.childNodes[2].childNodes[0];
     // Again the last child holds the answer
@@ -38,7 +72,7 @@ const rowToPopupButton = row => {
 
 const getConfirmationBtn = (idx) => $x(`${commonRootXpath}div[4]/div[2]/div[2]/div/div[2]/button[${idx}]`)[0];
 
-const popupButtonToPromiseOfUserConfirmationOfblock = (openPopupButton) => async () => {
+const popupButtonAndUsernameToPromiseOfUserConfirmationOfBlock = ([openPopupButton, usernameOfFollower]) => async () => {
     openPopupButton.click();
     // The popup takes some time to show up. We need to wait before we search its contents.
     await sleep(300);
@@ -53,6 +87,7 @@ const popupButtonToPromiseOfUserConfirmationOfblock = (openPopupButton) => async
             await sleep(200);
             const confirmButton = $x("/html/body/div/div/div/div[4]/div[2]/div[2]/div/div[2]/button")[0];
             confirmButton.click();
+            saveUserBlockage(usernameOfFollower);
             await sleep(200);
             resolve();
         });
@@ -60,8 +95,8 @@ const popupButtonToPromiseOfUserConfirmationOfblock = (openPopupButton) => async
 };
 
 const confirmations = followers
-    .map(rowToPopupButton)
-    .map(popupButtonToPromiseOfUserConfirmationOfblock);
+    .map(followerRow => [followerRowToPopupButton(followerRow), followerRowToBlogName(followerRow)])
+    .map(buttonUsernameTuple => popupButtonAndUsernameToPromiseOfUserConfirmationOfBlock(buttonUsernameTuple));
 
 const confirmEveryBlockInOrder = async () => {
     for (const confirmation of confirmations) {
