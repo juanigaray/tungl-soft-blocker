@@ -1,0 +1,22 @@
+{
+  "name": "tungl-soft-blocker",
+  "version": "1.0.0",
+  "description": "script to help you manually soft-block followers on tumblr dot com",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juanigaray/tungl-soft-blocker.git"
+  },
+  "author": "Chana Garay",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/juanigaray/tungl-soft-blocker/issues"
+  },
+  "homepage": "https://github.com/juanigaray/tungl-soft-blocker#readme",
+  "devDependencies": {
+    "typescript": "^5.5.3"
+  }
+}

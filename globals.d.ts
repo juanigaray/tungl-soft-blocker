@@ -1,0 +1,1 @@
+declare var $x: (xPath: string | undefined) => Array<HTMLElement>; 
