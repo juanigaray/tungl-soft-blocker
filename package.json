@@ -4,7 +4,7 @@
   "description": "script to help you manually soft-block followers on tumblr dot com",
   "main": "index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc --noEmit && esbuild index.ts --bundle --outfile='dist/out.js'"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/juanigaray/tungl-soft-blocker#readme",
   "devDependencies": {
+    "esbuild": "0.23.0",
     "typescript": "^5.5.3"
   }
 }
